@@ -2,7 +2,7 @@
 
 **Control Ableton Live from the terminal. No DAW interaction required.**
 
-Built by Joshua VanZanella — March 2026.
+Built by Joshua Vanzanella — March 2026.
 
 ---
 
