@@ -2,7 +2,7 @@
 TerminalDAW Client — core OSC bridge to Ableton Live
 """
 
-from pythonosc import udp_client
+from pythonosc import udp_client, dispatcher, osc_server
 import time
 import threading
 import math
@@ -31,9 +31,39 @@ def parse_note(s):
 
 class TerminalDAW:
 
-    def __init__(self, host='127.0.0.1', port=9000):
+    def __init__(self, host='127.0.0.1', port=9000, bpm=174):
         self._osc = udp_client.SimpleUDPClient(host, port)
-        self._bpm = 174
+        self._bpm = bpm
+        self._reply_port = 9001
+        self._start_reply_server()
+        self.sync_bpm()
+
+    def _start_reply_server(self):
+        """Listen on port 9001 for replies from Max/Ableton."""
+        self._disp = dispatcher.Dispatcher()
+        self._disp.set_default_handler(self._handle_reply)
+        try:
+            self._server = osc_server.ThreadingOSCUDPServer(
+                ('127.0.0.1', self._reply_port), self._disp
+            )
+            t = threading.Thread(target=self._server.serve_forever, daemon=True)
+            t.start()
+        except Exception:
+            self._server = None
+
+    def _handle_reply(self, address, *args):
+        if address == '/tempo' and args:
+            self._bpm = float(args[0])
+            print(f"  BPM synced: {self._bpm}")
+        elif address == '/session_info' and args:
+            self._bpm = float(args[0])
+            print(f"  Session: BPM={args[0]} tracks={args[1] if len(args)>1 else '?'}")
+
+    def sync_bpm(self):
+        """Request current BPM from Ableton."""
+        self._osc.send_message('/param', ['get_tempo'])
+        time.sleep(0.1)
+        return self
 
     def bpm(self, bpm):
         self._bpm = bpm
