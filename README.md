@@ -96,7 +96,7 @@ F minor DNB riff at 174 BPM with real-time HP filter wobble via LOM.
 
 ## License
 
-MIT License — Joshua Van Zanella, 2026.
+MIT License — Joshua Vanzanella, 2026.
 
 ---
 
